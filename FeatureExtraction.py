@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/6/28 17:21
 # @Author  :
-# @File    :
+# @File    :FeatureExtraction
 # @Description : 这个函数是用来balabalabala自己写
 
 import pandas as pd
@@ -22,12 +22,17 @@ from math import *
 
 
 class FeatureExtraction:
-    def __init__(self, strat_file, end_file, OutProcessedFilename):
+    """
+    FeatureExtraction类是用来提取特征的，运行前必须先使用dataloader制作裁剪完成的数据集；
+    内部已经嵌套完，仅需实例化后使用方法get_feature或者get_feature_bywindow
+
+    """
+    def __init__(self, id, strat_file, end_file, OutProcessedFilename):
+        self.id = id
         self.strat_file = strat_file
         self.end_file = end_file
         num = strat_file
-        self.data_path = 'E:/1研究生/9.实验/0.T00/T00/T00_{num:03}.xlsx'
-        self.data_original = pd.read_excel(f'E:/1研究生/9.实验/0.T00/T00/T00_{num:03}.xlsx')
+        self.data_original = pd.read_excel(f'E:/1研究生/9.实验/{self.id}.T0{self.id}/6.数据集/T0{self.id}-{num:03}.xlsx')
         self.OutProcessedFilename = OutProcessedFilename
 
         self.data_original_used = self.data_original.iloc[:, :]  # 设置选择数据量的大小,数据类型为pandas.core.frame.DataFrame,
@@ -226,7 +231,6 @@ class FeatureExtraction:
             'ret6': ret6,
             'ret7': ret7,
             'ret8': ret8,
-
         }
 
 
@@ -234,13 +238,15 @@ class FeatureExtraction:
         # all_results = pd.DataFrame()
         result_dfs = []
         for num in range(self.strat_file, self.end_file):
-            data_path = f'E:/1研究生/9.实验/0.T00/T00/T00_{num:03}.xlsx'
-            data_original = pd.read_excel(data_path)
+            data_path = f'E:/1研究生/9.实验/{self.id}.T0{self.id}/6.数据集/T0{self.id}-{num:03}.xlsx'
+            data_original = pd.read_excel(data_path).rolling(window=5, min_periods=1).mean()
+            # .rolling(window=5, min_periods=1).mean()
             for col in data_original.columns:
                 signal_data = data_original[col]
                 stats = self.signal_stats_all(signal_data, num,col)
                 result_df = pd.DataFrame([stats])  # 将单个信号统计数据转换为DataFrame
                 result_dfs.append(result_df)
+            print(num)
         all_results = pd.concat(result_dfs, ignore_index=True)
 
         with pd.ExcelWriter(self.OutProcessedFilename) as writer:
